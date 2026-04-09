@@ -1,0 +1,7 @@
+pyspark
+cassandra-driver
+fastapi
+uvicorn
+requests
+beautifulsoup4
+pandas

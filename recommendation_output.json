@@ -1,0 +1,13 @@
+{
+    "user_skills": [
+        "python"
+    ],
+    "recommended_skills": [
+        "aws",
+        "sql",
+        "ml",
+        "spark",
+        "hadoop"
+    ],
+    "ai_summary": "Python is a powerful foundation. To move from a \"scripter\" to a **Data Engineer** or **Machine Learning Engineer**, you need tools that handle data storage, scale, and intelligence.\n\n### 1. Why These Skills Matter\n\n*   **SQL:** The universal language for data. Python is used to process data, but SQL is how you extract it from databases. You cannot work in data without it.\n*   **AWS (Cloud):** Most Python code today doesn't run on a laptop; it runs on the cloud. AWS is the market leader for hosting applications, databases, and AI models.\n*   **Spark & Hadoop (Big Data):** Python can struggle with massive datasets (Gigabytes/Terabytes). Spark and Hadoop allow you to distribute that work across multiple computers.\n*   **ML (Machine Learning):** This is the highest-value application of Python. It allows you to build predictive models rather than just automating basic tasks.\n\n---\n\n### 2. Practical Learning Path\n\nFollow this order to build a logical stack:\n\n#### Phase 1: The Data Foundation (SQL)\n*   **Goal:** Learn to query relational databases.\n*   **Focus:** Joins, Aggregations (GROUP BY), and Subqueries. \n*   **Python Link:** Practice using the `pandas` library to read SQL queries.\n\n#### Phase 2: Scaling Up (Spark & Hadoop)\n*   **Goal:** Move from small data to \"Big Data.\"\n*   **Focus:** Focus on **PySpark** first (it's more modern and relevant than Hadoop). Learn how to transform large datasets across a cluster.\n*   **Python Link:** PySpark uses Python syntax to run Spark jobs.\n\n#### Phase 3: The Environment (AWS)\n*   **Goal:** Learn where the code lives.\n*   **Focus:** EC2 (Servers), S3 (Storage), and Lambda (Serverless functions).\n*   **Python Link:** Use the `boto3` library to control AWS resources using Python scripts.\n\n#### Phase 4: Intelligence (ML)\n*   **Goal:** Build predictive power.\n*   **Focus:** Scikit-Learn (basic ML), then move to XGBoost or TensorFlow. Learn the workflow: Data cleaning -> Training -> Evaluation.\n*   **Python Link:** This is entirely done within Python environments like Jupyter Notebooks.\n\n---\n\n### 3. Summary for your Resume\nBy combining these, your profile shifts from **\"I know Python\"** to **\"I can build and deploy scalable, data-driven AI solutions on the cloud.\"**"
+}
