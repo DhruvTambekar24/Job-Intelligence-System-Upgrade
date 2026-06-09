@@ -13,23 +13,21 @@ Copy `.env.example` to `.env` and fill in at least:
 
 ```env
 JSEARCH_API_KEY=your_rapidapi_jsearch_key
-DATABASE_URL=postgresql://jobintel:jobintel@localhost:5432/jobintel
+DATABASE_URL=postgresql://username:password@host:5432/database_name
 STORE_TO_POSTGRES=true
 ```
 
 `GOOGLE_API_KEY` is only needed for the AI summary in `/recommend`.
 
-## Start Postgres
+## Postgres
 
-```powershell
-docker compose -f docker-compose.postgres.yml up -d
+Use your hosted Postgres database. Put its connection string in `.env`:
+
+```env
+DATABASE_URL=postgresql://username:password@host:5432/database_name
 ```
 
-The schema is in `postgres/schema.sql`. The default connection string is:
-
-```text
-postgresql://jobintel:jobintel@localhost:5432/jobintel
-```
+The schema is in `postgres/schema.sql`.
 
 ## Test Scraping Without Airflow
 
@@ -60,7 +58,7 @@ Useful Airflow environment variables:
 ```env
 AIRFLOW_PROJECT_ROOT=C:\Users\manty\Desktop\Job-Intelligence-System-Upgrade
 JSEARCH_API_KEY=your_rapidapi_jsearch_key
-DATABASE_URL=postgresql://jobintel:jobintel@localhost:5432/jobintel
+DATABASE_URL=postgresql://username:password@host:5432/database_name
 SCRAPER_LOCATION=india
 SCRAPER_PAGES=3
 ```

@@ -8,7 +8,6 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
     AIRFLOW_PROJECT_ROOT: /opt/airflow/project
-    DATABASE_URL: postgresql://jobintel:jobintel@host.docker.internal:5432/jobintel
     _PIP_ADDITIONAL_REQUIREMENTS: psycopg2-binary python-dotenv requests
   volumes:
     - ./airflow/dags:/opt/airflow/dags

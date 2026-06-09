@@ -18,7 +18,7 @@ Airflow
 ## Requirements
 
 - Python
-- Docker Desktop, for local Postgres
+- Hosted Postgres database
 - Apache Airflow, already installed on your system
 - RapidAPI JSearch API key
 
@@ -34,7 +34,7 @@ Create a `.env` file in the project root:
 
 ```env
 JSEARCH_API_KEY=your_rapidapi_jsearch_key
-DATABASE_URL=postgresql://jobintel:jobintel@localhost:5432/jobintel
+DATABASE_URL=postgresql://username:password@host:5432/database_name
 STORE_TO_POSTGRES=true
 
 SCRAPER_LOCATION=india
@@ -46,19 +46,13 @@ GOOGLE_API_KEY=
 AIRFLOW_PROJECT_ROOT=C:\Users\manty\Desktop\Job-Intelligence-System-Upgrade
 ```
 
-## Start Postgres
+## Postgres
 
-```powershell
-docker compose -f docker-compose.postgres.yml up -d
+This project now expects a hosted Postgres database. Put the hosted connection string in `.env`:
+
+```env
+DATABASE_URL=postgresql://username:password@host:5432/database_name
 ```
-
-Check it is running:
-
-```powershell
-docker ps
-```
-
-You should see the `jobintel-postgres` container.
 
 ## Initialize Database
 
@@ -102,23 +96,11 @@ python scraper/postgres_store.py data/raw/jobs_20260609_224057.json
 
 ## Check Data In Postgres
 
-Open `psql` inside the Postgres container:
-
-```powershell
-docker exec -it jobintel-postgres psql -U jobintel -d jobintel
-```
-
-Then run:
+Connect to your hosted Postgres database with `psql` or your database UI, then run:
 
 ```sql
 SELECT COUNT(*) FROM jobs;
 SELECT job_id, title, company, location, scraped_at FROM jobs LIMIT 10;
-```
-
-Exit:
-
-```sql
-\q
 ```
 
 ## Run Airflow
@@ -152,7 +134,7 @@ Set environment variables before starting Airflow:
 ```powershell
 $env:AIRFLOW_PROJECT_ROOT="C:\Users\manty\Desktop\Job-Intelligence-System-Upgrade"
 $env:JSEARCH_API_KEY="your_rapidapi_jsearch_key"
-$env:DATABASE_URL="postgresql://jobintel:jobintel@localhost:5432/jobintel"
+$env:DATABASE_URL="postgresql://username:password@host:5432/database_name"
 ```
 
 Start Airflow in two terminals:
