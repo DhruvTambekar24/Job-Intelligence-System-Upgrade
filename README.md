@@ -1,31 +1,58 @@
 # Job Intelligence System Upgrade
 
-This project scrapes job listings, stores them in Postgres, and exposes them through a FastAPI backend. Airflow is used to automate the scraping pipeline.
+Job Intelligence System Upgrade is a data engineering project that collects live job listings, stores the raw scrape as JSON, loads the curated data into Postgres, and serves it through a FastAPI backend and Next.js frontend. Airflow orchestrates the scraping pipeline, Spark is used for the analytics/recommendation layer, and Docker is used to run Airflow locally in a repeatable way.
 
-## Current Architecture
+## What The Project Does
 
 ```text
-Airflow
+RapidAPI JSearch
   -> scraper/job_scraper.py
   -> data/raw/jobs_*.json
   -> scraper/postgres_store.py
   -> Postgres jobs table
-  -> FastAPI backend /jobs APIs
+  -> FastAPI backend
+  -> Next.js frontend
 ```
 
-`data/raw` is kept as a staging and backup copy of each scrape. Postgres is the main database for job browsing/search APIs.
+The pipeline keeps `data/raw` as a timestamped landing zone for each scrape. Postgres is the source of truth for the job board and search API. The frontend reads from the backend API and displays jobs, recommendations, trends, and other analytics views.
+
+## Tech Stack
+
+- Airflow for scheduling and orchestration
+- Docker for local Airflow/Postgres setup
+- Postgres for job storage and querying
+- Supabase Postgres as the intended hosted database target
+- Spark for analytics and skill recommendation processing
+- FastAPI for the backend API
+- Next.js for the frontend UI
+- RapidAPI JSearch for the job data source
+
+## Current Status
+
+- The job scraping to Postgres flow is implemented and usable.
+- The backend still contains legacy Spark/HDFS references in some analytics endpoints.
+- HDFS and Cassandra are not part of the intended runtime for this project.
+- Those HDFS-linked analytics calls are meant to be migrated to Supabase/Postgres-backed data.
 
 ## Requirements
 
-- Python
-- Hosted Postgres database
-- Apache Airflow, already installed on your system
+- Python 3.10+
+- Node.js 18+
+- Docker Desktop
 - RapidAPI JSearch API key
+- Supabase Postgres connection string or another Postgres database URL
 
-Install Python dependencies:
+Install the Python dependencies:
 
 ```powershell
 pip install -r requirements.txt
+```
+
+Install the frontend dependencies:
+
+```powershell
+cd frontend
+pnpm install
 ```
 
 ## Environment
@@ -46,141 +73,109 @@ GOOGLE_API_KEY=
 AIRFLOW_PROJECT_ROOT=C:\Users\manty\Desktop\Job-Intelligence-System-Upgrade
 ```
 
-## Postgres
-
-This project now expects a hosted Postgres database. Put the hosted connection string in `.env`:
+For the frontend, create `frontend/.env.local` if you want to override the API URL:
 
 ```env
-DATABASE_URL=postgresql://username:password@host:5432/database_name
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-## Initialize Database
+## Docker Airflow Setup
 
-Run once, or whenever the schema changes:
+The local Airflow stack is defined in `docker-compose.airflow.yml` and includes Airflow plus a small Postgres container for Airflow metadata.
+
+Initialize Airflow once:
 
 ```powershell
-python scraper/postgres_store.py
+docker compose -f docker-compose.airflow.yml up airflow-init
 ```
 
-Expected output:
+Start the webserver and scheduler:
+
+```powershell
+docker compose -f docker-compose.airflow.yml up -d airflow-webserver airflow-scheduler
+```
+
+Open the Airflow UI at:
 
 ```text
-Postgres schema initialized.
+http://localhost:8080
 ```
 
-## Run Scraper Manually
+Default Airflow login:
 
-Manual run is useful for testing before using Airflow:
+```text
+username: admin
+password: admin
+```
+
+The DAG is located at:
+
+```text
+airflow/dags/job_scraping_dag.py
+```
+
+Its DAG id is:
+
+```text
+job_scraping_to_postgres
+```
+
+Pipeline order:
+
+```text
+init_postgres -> scrape_jobs -> store_jobs_postgres
+```
+
+## Scraper
+
+The scraper pulls jobs from RapidAPI JSearch using the roles, location, and page settings from `.env`. Every run writes a raw JSON file into `data/raw` and can also upsert the records into Postgres.
+
+Run it manually for a quick check:
 
 ```powershell
 python scraper/job_scraper.py
 ```
 
-Expected output:
-
-```text
-Total jobs collected: 100
-Saved to: data/raw/jobs_...
-Upserted to Postgres: ...
-```
-
-If RapidAPI returns `403`, check the API key and JSearch subscription. If it returns `429`, reduce roles/pages or wait for quota reset.
-
-## Load Existing Raw JSON Into Postgres
-
-Use this when you already have a file in `data/raw` and do not want to call RapidAPI again:
+If you already have a raw JSON file, load it directly into Postgres:
 
 ```powershell
 python scraper/postgres_store.py data/raw/jobs_20260609_224057.json
 ```
 
-## Check Data In Postgres
+Initialize the schema when needed:
 
-Connect to your hosted Postgres database with `psql` or your database UI, then run:
+```powershell
+python scraper/postgres_store.py
+```
+
+## Database
+
+This project is designed around Postgres, preferably Supabase Postgres for the hosted environment.
+
+Check the data after a run with SQL like this:
 
 ```sql
 SELECT COUNT(*) FROM jobs;
 SELECT job_id, title, company, location, scraped_at FROM jobs LIMIT 10;
 ```
 
-## Run Airflow
+## Backend
 
-The DAG file is:
-
-```text
-airflow/dags/job_scraping_dag.py
-```
-
-DAG id:
-
-```text
-job_scraping_to_postgres
-```
-
-Make sure Airflow can see the DAG. Check your Airflow DAG folder:
-
-```powershell
-airflow config get-value core dags_folder
-```
-
-Copy the DAG there if needed:
-
-```powershell
-Copy-Item airflow\dags\job_scraping_dag.py "$env:USERPROFILE\airflow\dags"
-```
-
-Set environment variables before starting Airflow:
-
-```powershell
-$env:AIRFLOW_PROJECT_ROOT="C:\Users\manty\Desktop\Job-Intelligence-System-Upgrade"
-$env:JSEARCH_API_KEY="your_rapidapi_jsearch_key"
-$env:DATABASE_URL="postgresql://username:password@host:5432/database_name"
-```
-
-Start Airflow in two terminals:
-
-```powershell
-airflow webserver --port 8080
-```
-
-```powershell
-airflow scheduler
-```
-
-Open:
-
-```text
-http://localhost:8080
-```
-
-Unpause and trigger:
-
-```text
-job_scraping_to_postgres
-```
-
-Task order:
-
-```text
-init_postgres -> scrape_jobs -> store_jobs_postgres
-```
-
-`init_postgres` is safe to run every time, but it is only strictly needed during first setup or after schema changes.
-
-## Run Backend
+Start the backend API with:
 
 ```powershell
 uvicorn backend.main:app --reload
 ```
 
-Open:
+Backend URLs to open:
 
 ```text
 http://127.0.0.1:8000/health
 http://127.0.0.1:8000/jobs
+http://127.0.0.1:8000/jobs/any-job-id
 ```
 
-The job board routes read from Postgres:
+The main Postgres-backed routes are:
 
 ```text
 /jobs
@@ -188,9 +183,10 @@ The job board routes read from Postgres:
 /search/jobs
 /skills/all
 /jobs/match
+/recommend
 ```
 
-Some analytics routes still read Spark/HDFS outputs:
+The analytics endpoints below are still tied to Spark output paths in the current backend code and should be treated as the unfinished migration area:
 
 ```text
 /top-skills
@@ -200,8 +196,45 @@ Some analytics routes still read Spark/HDFS outputs:
 /job-clusters
 ```
 
+## Frontend
+
+The frontend is a Next.js app in `frontend/` and talks to the backend through `NEXT_PUBLIC_API_URL`.
+
+Start it locally with:
+
+```powershell
+cd frontend
+pnpm dev
+```
+
+Open the app at:
+
+```text
+http://localhost:3000
+```
+
+Useful pages include:
+
+```text
+/dashboard
+/jobs
+/recommendations
+/trends
+/skills
+/clusters
+/settings
+```
+
+## How To See Results
+
+1. Run the Airflow stack and trigger `job_scraping_to_postgres` from the Airflow UI.
+2. Confirm rows are in Postgres by querying the `jobs` table or opening your Supabase table viewer.
+3. Start the backend and open `/jobs` or `/search/jobs` in the browser to verify API output.
+4. Start the frontend and browse the dashboard, jobs, trends, and recommendations pages.
+
 ## Notes
 
-- Cassandra is not used in the current Airflow + Postgres flow.
-- `data/raw` is optional for the final architecture, but useful for debugging and reloading data without using API quota.
+- HDFS and Cassandra are not used in the intended final architecture.
+- The backend still contains some HDFS-related Spark reads, so those analytics routes are not fully migrated yet.
+- `data/raw` is useful for debugging and reloading without consuming API quota.
 - Keep API keys in `.env`, not in source code.
