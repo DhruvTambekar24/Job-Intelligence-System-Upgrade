@@ -6,33 +6,41 @@ from typing import Any
 
 import psycopg2
 from psycopg2.extras import Json, execute_values
+from dotenv import load_dotenv
 
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ImportError:
-    pass
-
+load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = PROJECT_ROOT / "postgres" / "schema.sql"
-DEFAULT_DATABASE_URL = "postgresql://jobintel:jobintel@localhost:5432/jobintel"
 
 
 def get_database_url() -> str:
-    return os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise ValueError(
+            "DATABASE_URL not found. Please add it to your .env file."
+        )
+
+    print("Using database:", database_url.split("@")[-1])
+    return database_url
 
 
 def get_connection():
-    return psycopg2.connect(get_database_url())
+    return psycopg2.connect(
+        get_database_url(),
+        sslmode="require"
+    )
 
 
 def init_db() -> None:
     schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
+
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(schema_sql)
+
+    print("Schema initialized successfully.")
 
 
 def upsert_jobs(jobs: list[dict[str, Any]]) -> int:
@@ -41,7 +49,9 @@ def upsert_jobs(jobs: list[dict[str, Any]]) -> int:
         for job in jobs
         if job.get("job_id")
     }
+
     valid_jobs = list(jobs_by_id.values())
+
     if not valid_jobs:
         return 0
 
@@ -121,10 +131,10 @@ def upsert_jobs(jobs: list[dict[str, Any]]) -> int:
 
 def main() -> None:
     init_db()
-    print("Postgres schema initialized.")
 
     if len(sys.argv) > 1:
         input_file = Path(sys.argv[1])
+
         with input_file.open("r", encoding="utf-8") as file:
             jobs = json.load(file)
 
