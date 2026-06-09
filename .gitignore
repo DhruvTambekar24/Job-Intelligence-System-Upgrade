@@ -1,0 +1,62 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Airflow local runtime files
+airflow/logs/
+airflow/airflow.db
+airflow/airflow.cfg
+airflow/webserver_config.py
+airflow/*.pid
+logs/
+
+# Scraped and processed data outputs
+data/raw/*.json
+data/processed/
+*.parquet
+*.snappy.parquet
+
+# Node / Next.js frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/.turbo/
+frontend/.pnpm-store/
+frontend/.env.local
+frontend/.env.*.local
+
+# Build and cache folders
+dist/
+build/
+.cache/
+tmp/
+temp/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local generated files
+recommendation_output.json
