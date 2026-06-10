@@ -83,13 +83,27 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 
 The local Airflow stack is defined in `docker-compose.airflow.yml` and includes Airflow plus a small Postgres container for Airflow metadata.
 
+The custom Airflow image is published on Docker Hub at [devik009/jobintel-airflow](https://hub.docker.com/repository/docker/devik009/jobintel-airflow/).
+
 Initialize Airflow once:
 
 ```powershell
 docker compose -f docker-compose.airflow.yml up airflow-init
 ```
 
+### Initial setup
+
+```powershell
+docker compose -f docker-compose.airflow.yml up airflow-init
+```
+
 Start the webserver and scheduler:
+
+```powershell
+docker compose -f docker-compose.airflow.yml up -d airflow-webserver airflow-scheduler
+```
+
+### Start Airflow
 
 ```powershell
 docker compose -f docker-compose.airflow.yml up -d airflow-webserver airflow-scheduler
