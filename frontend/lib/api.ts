@@ -65,7 +65,21 @@ export async function getJobClusters() {
 }
 export async function getCooccurrence() {
   try {
-    return await safeJsonFetch(`${BASE_URL}/skill-cooccurrence`);
+    const data = await safeJsonFetch(`${BASE_URL}/skill-cooccurrence`);
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data?.relations)) {
+      return data.relations;
+    }
+
+    if (Array.isArray(data?.cooccurrence)) {
+      return data.cooccurrence;
+    }
+
+    return [];
   } catch (err) {
     console.warn('getCooccurrence failed:', err);
     return [];
