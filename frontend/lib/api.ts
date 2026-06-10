@@ -40,7 +40,12 @@ export async function getJobsByCity() {
 
 export async function getJobTrends() {
   try {
-    return await safeJsonFetch(`${BASE_URL}/job-trends`);
+    const data = await safeJsonFetch(`${BASE_URL}/job-trends`);
+    // Normalize response to ensure it's an array
+    if (Array.isArray(data)) return data;
+    if (data?.trends && Array.isArray(data.trends)) return data.trends;
+    if (data?.data && Array.isArray(data.data)) return data.data;
+    return [];
   } catch (err) {
     console.warn('getJobTrends failed:', err);
     return [];

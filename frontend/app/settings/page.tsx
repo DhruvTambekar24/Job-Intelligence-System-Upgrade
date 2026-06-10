@@ -1,5 +1,7 @@
+
 'use client'
 
+import { useState } from 'react'
 import { MainLayout } from '@/components/main-layout'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Bell, Shield, LogOut } from 'lucide-react'
 
 export default function SettingsPage() {
+  const [saveStatus, setSaveStatus] = useState<string | null>(null)
+
+  const handleSaveChanges = () => {
+    setSaveStatus('Settings saved locally.')
+  }
+
   return (
     <MainLayout>
       <div className="space-y-8 max-w-4xl">
@@ -72,7 +80,14 @@ export default function SettingsPage() {
                   />
                 </FieldGroup>
 
-                <Button>Save Changes</Button>
+                <div className="flex items-center gap-4">
+                  <Button onClick={handleSaveChanges}>Save Changes</Button>
+                  {saveStatus && (
+                    <p className="text-sm text-primary" role="status">
+                      {saveStatus}
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

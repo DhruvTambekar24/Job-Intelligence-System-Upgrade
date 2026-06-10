@@ -1,12 +1,12 @@
-import os
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
 
 import psycopg2
-from psycopg2.extras import Json, execute_values
 from dotenv import load_dotenv
+from psycopg2.extras import Json, execute_values
 
 load_dotenv()
 
@@ -22,14 +22,24 @@ def get_database_url() -> str:
             "DATABASE_URL not found. Please add it to your .env file."
         )
 
-    print("Using database:", database_url.split("@")[-1])
     return database_url
 
 
 def get_connection():
+    database_url = get_database_url()
+
+    # Add sslmode=require only if not already present
+    if "sslmode=" not in database_url:
+        separator = "&" if "?" in database_url else "?"
+        database_url += f"{separator}sslmode=require"
+
     return psycopg2.connect(
-        get_database_url(),
-        sslmode="require"
+        database_url,
+        connect_timeout=10,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=5,
     )
 
 
@@ -119,7 +129,7 @@ def upsert_jobs(jobs: list[dict[str, Any]]) -> int:
             scraped_role = EXCLUDED.scraped_role,
             scraped_at = EXCLUDED.scraped_at,
             raw_payload = EXCLUDED.raw_payload,
-            updated_at = now()
+            updated_at = NOW()
     """
 
     with get_connection() as conn:
